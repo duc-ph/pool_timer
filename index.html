@@ -29,10 +29,13 @@
       color: #eee;
     }
     .timer-display {
-      font-size: 400px;
+      font-size: min(400px, 40vw);
       font-weight: bold;
       margin-bottom: 40px;
       font-variant-numeric: tabular-nums;
+      cursor: pointer;
+      user-select: none;
+      -webkit-user-select: none;
     }
     .timer-display.running {
       color: #4ade80;
@@ -186,11 +189,11 @@
 
     function updateStatus() {
       if (state === 'idle') {
-        statusEl.textContent = 'Press SPACE to start';
+        statusEl.textContent = 'Tap or press SPACE to start';
       } else if (state === 'running') {
-        statusEl.textContent = 'Press SPACE to stop';
+        statusEl.textContent = 'Tap or press SPACE to stop';
       } else {
-        statusEl.textContent = 'Press SPACE to start new timer';
+        statusEl.textContent = 'Tap or press SPACE to restart';
       }
     }
 
@@ -272,6 +275,8 @@
 
     hamburger.addEventListener('click', toggleSettings);
     overlay.addEventListener('click', toggleSettings);
+
+    timerEl.addEventListener('click', handleSpace);
 
     document.addEventListener('keydown', (e) => {
       if (e.code === 'Space' && e.target !== durationInput && e.target !== extensionTimeInput) {

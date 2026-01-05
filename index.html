@@ -29,7 +29,7 @@
       color: #eee;
     }
     .timer-display {
-      font-size: 120px;
+      font-size: 400px;
       font-weight: bold;
       margin-bottom: 40px;
       font-variant-numeric: tabular-nums;
@@ -43,21 +43,72 @@
     .timer-display.idle {
       color: #fff;
     }
-    .settings {
-      margin-bottom: 30px;
+    .hamburger {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 10px;
+      z-index: 1001;
     }
-    .settings label {
-      font-size: 16px;
-      color: #aaa;
+    .hamburger span {
+      display: block;
+      width: 25px;
+      height: 3px;
+      background: #fff;
+      margin: 5px 0;
+      transition: 0.3s;
     }
-    .settings input {
-      width: 80px;
-      padding: 8px 12px;
+    .settings-panel {
+      position: fixed;
+      top: 0;
+      right: -300px;
+      width: 280px;
+      height: 100vh;
+      background: #2a2a4e;
+      padding: 80px 20px 20px;
+      transition: right 0.3s;
+      z-index: 1000;
+    }
+    .settings-panel.open {
+      right: 0;
+    }
+    .settings-panel h2 {
       font-size: 18px;
+      margin-bottom: 20px;
+      color: #eee;
+    }
+    .settings-panel label {
+      font-size: 14px;
+      color: #aaa;
+      display: block;
+      margin-bottom: 10px;
+    }
+    .settings-panel input {
+      width: 100%;
+      padding: 10px;
+      font-size: 16px;
       border: none;
       border-radius: 4px;
       text-align: center;
-      margin: 0 8px;
+    }
+    .overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      opacity: 0;
+      visibility: hidden;
+      transition: 0.3s;
+      z-index: 999;
+    }
+    .overlay.open {
+      opacity: 1;
+      visibility: visible;
     }
     .extension-btn {
       background: #3b82f6;
@@ -79,12 +130,24 @@
   </style>
 </head>
 <body>
+  <button class="hamburger" id="hamburger">
+    <span></span>
+    <span></span>
+    <span></span>
+  </button>
+  <div class="overlay" id="overlay"></div>
+  <div class="settings-panel" id="settingsPanel">
+    <h2>Settings</h2>
+    <label>Duration (seconds)
+      <input type="number" id="duration" value="60" min="1">
+    </label>
+    <label>Extension (seconds)
+      <input type="number" id="extensionTime" value="60" min="1">
+    </label>
+  </div>
   <div class="container">
     <h1>POOL SHOT TIMER</h1>
     <div class="timer-display idle" id="timer">60</div>
-    <div class="settings">
-      <label>Duration: <input type="number" id="duration" value="60" min="1"> seconds</label>
-    </div>
     <button class="extension-btn" id="extension">+60s Extension</button>
     <div class="status" id="status">Press SPACE to start</div>
   </div>
@@ -95,7 +158,23 @@
     const extensionBtn = document.getElementById('extension');
     const statusEl = document.getElementById('status');
 
+    const beep1 = new Audio('sound/beep1.mp3');
+    const beep2 = new Audio('sound/beep2.mp3');
+
+    function stopAllBeeps() {
+      beep1.pause();
+      beep1.currentTime = 0;
+      beep2.pause();
+      beep2.currentTime = 0;
+    }
+
+    function playBeep(beep) {
+      stopAllBeeps();
+      beep.play();
+    }
+
     let duration = 60;
+    let extensionAmount = 60;
     let remainingTime = 60;
     let intervalId = null;
     let state = 'idle'; // idle, running, stopped
@@ -126,7 +205,13 @@
       intervalId = setInterval(() => {
         remainingTime--;
         updateDisplay();
-        if (remainingTime <= 0) {
+
+        if (remainingTime === 10) {
+          playBeep(beep1);
+        } else if (remainingTime >= 1 && remainingTime <= 5) {
+          playBeep(beep2);
+        } else if (remainingTime <= 0) {
+          playBeep(beep1);
           stopTimer();
         }
       }, 1000);
@@ -151,9 +236,15 @@
     }
 
     function addExtension() {
-      remainingTime += 60;
+      remainingTime += extensionAmount;
       updateDisplay();
     }
+
+    function updateExtensionButton() {
+      extensionBtn.textContent = '+' + extensionAmount + 's Extension';
+    }
+
+    const extensionTimeInput = document.getElementById('extensionTime');
 
     durationInput.addEventListener('change', () => {
       duration = parseInt(durationInput.value) || 60;
@@ -163,10 +254,27 @@
       }
     });
 
+    extensionTimeInput.addEventListener('change', () => {
+      extensionAmount = parseInt(extensionTimeInput.value) || 60;
+      updateExtensionButton();
+    });
+
     extensionBtn.addEventListener('click', addExtension);
 
+    const hamburger = document.getElementById('hamburger');
+    const settingsPanel = document.getElementById('settingsPanel');
+    const overlay = document.getElementById('overlay');
+
+    function toggleSettings() {
+      settingsPanel.classList.toggle('open');
+      overlay.classList.toggle('open');
+    }
+
+    hamburger.addEventListener('click', toggleSettings);
+    overlay.addEventListener('click', toggleSettings);
+
     document.addEventListener('keydown', (e) => {
-      if (e.code === 'Space' && e.target !== durationInput) {
+      if (e.code === 'Space' && e.target !== durationInput && e.target !== extensionTimeInput) {
         e.preventDefault();
         handleSpace();
       }

@@ -152,7 +152,7 @@
     <h1>POOL SHOT TIMER</h1>
     <div class="timer-display idle" id="timer">60</div>
     <button class="extension-btn" id="extension">+60s Extension</button>
-    <div class="status" id="status">Press SPACE to start</div>
+    <div class="status" id="status">Tap timer or press SPACE to start</div>
   </div>
 
   <script>
@@ -215,16 +215,19 @@
           playBeep(beep2);
         } else if (remainingTime <= 0) {
           playBeep(beep1);
-          stopTimer();
+          stopTimer(false);
         }
       }, 1000);
     }
 
-    function stopTimer() {
+    function stopTimer(stopSound = true) {
       state = 'stopped';
       if (intervalId) {
         clearInterval(intervalId);
         intervalId = null;
+      }
+      if (stopSound) {
+        stopAllBeeps();
       }
       updateDisplay();
       updateStatus();

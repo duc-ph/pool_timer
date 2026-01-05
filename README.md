@@ -2,6 +2,8 @@
 
 A simple web app for timing pool shots.
 
+https://duc-ph.github.io/pool_timer/
+
 ## Usage
 
 Open `index.html` in any browser.

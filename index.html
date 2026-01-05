@@ -163,6 +163,17 @@
 
     const beep1 = new Audio('sound/beep1.mp3');
     const beep2 = new Audio('sound/beep2.mp3');
+    beep1.preload = 'auto';
+    beep2.preload = 'auto';
+
+    // Unlock audio on first user interaction (required for mobile)
+    let audioUnlocked = false;
+    function unlockAudio() {
+      if (audioUnlocked) return;
+      beep1.play().then(() => { beep1.pause(); beep1.currentTime = 0; }).catch(() => {});
+      beep2.play().then(() => { beep2.pause(); beep2.currentTime = 0; }).catch(() => {});
+      audioUnlocked = true;
+    }
 
     function stopAllBeeps() {
       beep1.pause();
@@ -176,9 +187,9 @@
       beep.play();
     }
 
-    let duration = 60;
-    let extensionAmount = 60;
-    let remainingTime = 60;
+    let duration = parseInt(localStorage.getItem('poolTimerDuration')) || 60;
+    let extensionAmount = parseInt(localStorage.getItem('poolTimerExtension')) || 60;
+    let remainingTime = duration;
     let intervalId = null;
     let state = 'idle'; // idle, running, stopped
 
@@ -234,6 +245,7 @@
     }
 
     function handleSpace() {
+      unlockAudio();
       if (state === 'idle' || state === 'stopped') {
         startTimer();
       } else if (state === 'running') {
@@ -254,6 +266,7 @@
 
     durationInput.addEventListener('change', () => {
       duration = parseInt(durationInput.value) || 60;
+      localStorage.setItem('poolTimerDuration', duration);
       if (state === 'idle') {
         remainingTime = duration;
         updateDisplay();
@@ -262,6 +275,7 @@
 
     extensionTimeInput.addEventListener('change', () => {
       extensionAmount = parseInt(extensionTimeInput.value) || 60;
+      localStorage.setItem('poolTimerExtension', extensionAmount);
       updateExtensionButton();
     });
 
@@ -288,6 +302,10 @@
       }
     });
 
+    // Initialize UI with cached values
+    durationInput.value = duration;
+    extensionTimeInput.value = extensionAmount;
+    updateExtensionButton();
     updateDisplay();
   </script>
 </body>
